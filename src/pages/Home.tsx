@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
-import { getCities } from '../lib/db';
+import { getCities, getCityCoverPhotos } from '../lib/db';
+import type { City } from '../lib/types';
+import WorldMap from '../components/WorldMap';
 
 function fmtMonthYear(s: string | undefined, style: 'short' | 'long' = 'short'): string {
   if (!s) return '';
@@ -8,12 +10,97 @@ function fmtMonthYear(s: string | undefined, style: 'short' | 'long' = 'short'):
   if (!y || !m) return '';
   return new Date(y, m - 1).toLocaleDateString('en-US', { month: style, year: 'numeric' });
 }
-import type { City } from '../lib/types';
-import WorldMap from '../components/WorldMap';
 
 type View = 'map' | 'list';
+type GroupBy = 'none' | 'year' | 'country';
+type SortBy = 'date-desc' | 'date-asc' | 'country' | 'name' | 'coverage';
 
-function CityCard({ city }: { city: City }) {
+function sortCities(list: City[], sort: SortBy): City[] {
+  return [...list].sort((a, b) => {
+    switch (sort) {
+      case 'date-desc': {
+        const da = a.tripDate || a.createdAt || '';
+        const db = b.tripDate || b.createdAt || '';
+        if (da && !db) return -1;
+        if (!da && db) return 1;
+        const cmp = db.localeCompare(da);
+        if (cmp !== 0) return cmp;
+        return a.name.localeCompare(b.name);
+      }
+      case 'date-asc': {
+        const da = a.tripDate || a.createdAt || '';
+        const db = b.tripDate || b.createdAt || '';
+        if (da && !db) return 1;
+        if (!da && db) return -1;
+        const cmp = da.localeCompare(db);
+        if (cmp !== 0) return cmp;
+        return a.name.localeCompare(b.name);
+      }
+      case 'country': {
+        const c = a.country.localeCompare(b.country);
+        if (c !== 0) return c;
+        return a.name.localeCompare(b.name);
+      }
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'coverage': {
+        const pctA = a.totalLines > 0 ? a.coveredLines / a.totalLines : 0;
+        const pctB = b.totalLines > 0 ? b.coveredLines / b.totalLines : 0;
+        if (pctB !== pctA) return pctB - pctA;
+        return a.name.localeCompare(b.name);
+      }
+      default:
+        return 0;
+    }
+  });
+}
+
+interface CityGroup {
+  key: string;
+  title: string;
+  cities: City[];
+}
+
+function groupCities(list: City[], groupBy: GroupBy, sortBy: SortBy): CityGroup[] {
+  if (groupBy === 'none') {
+    return [{ key: 'all', title: '', cities: sortCities(list, sortBy) }];
+  }
+
+  const map = new Map<string, City[]>();
+  for (const c of list) {
+    let key = 'Undated';
+    if (groupBy === 'year') {
+      if (c.tripDate) {
+        const y = c.tripDate.split('-')[0];
+        if (y && y.length === 4) key = y;
+      }
+    } else if (groupBy === 'country') {
+      key = c.country || 'Other';
+    }
+
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(c);
+  }
+
+  const keys = Array.from(map.keys());
+  if (groupBy === 'year') {
+    keys.sort((a, b) => {
+      if (a === 'Undated') return 1;
+      if (b === 'Undated') return -1;
+      return sortBy === 'date-asc' ? a.localeCompare(b) : b.localeCompare(a);
+    });
+  } else if (groupBy === 'country') {
+    keys.sort((a, b) => a.localeCompare(b));
+  }
+
+  return keys.map(k => ({
+    key: k,
+    title: k,
+    cities: sortCities(map.get(k)!, sortBy),
+  }));
+}
+
+function CityCard({ city, cover }: { city: City; cover?: string }) {
   const pct = city.totalLines > 0 ? Math.round((city.coveredLines / city.totalLines) * 100) : 0;
   const date = fmtMonthYear(city.tripDate, 'short');
 
@@ -22,14 +109,23 @@ function CityCard({ city }: { city: City }) {
       to={`/city/${city.id}`}
       className="group block bg-surface border border-border rounded hover:border-muted transition-all overflow-hidden"
     >
-      {/* Cover or placeholder */}
+      {/* Cover image or placeholder initial */}
       <div className="aspect-[4/3] bg-raised flex items-center justify-center relative overflow-hidden">
-        <div className="font-display text-6xl font-800 text-border group-hover:text-muted transition-colors select-none">
-          {city.name.charAt(0)}
-        </div>
+        {cover ? (
+          <img
+            src={cover}
+            alt={city.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="font-display text-6xl font-800 text-border group-hover:text-muted transition-colors select-none">
+            {city.name.charAt(0)}
+          </div>
+        )}
         {/* Coverage arc overlay */}
-        <div className="absolute bottom-2 right-2">
-          <svg viewBox="0 0 36 36" className="w-9 h-9 -rotate-90">
+        <div className="absolute bottom-2 right-2 bg-bg/80 rounded-full p-0.5 backdrop-blur-sm shadow">
+          <svg viewBox="0 0 36 36" className="w-8 h-8 -rotate-90">
             <circle cx="18" cy="18" r="14" fill="none" stroke="#1e3554" strokeWidth="3" />
             <circle
               cx="18" cy="18" r="14" fill="none"
@@ -69,11 +165,17 @@ function CityCard({ city }: { city: City }) {
 export default function Home() {
   const [view, setView] = useState<View>('map');
   const [cities, setCities] = useState<City[]>([]);
+  const [coverMap, setCoverMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
+  // List view sorting & grouping state
+  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  const [sortBy, setSortBy] = useState<SortBy>('date-desc');
+
   useEffect(() => {
-    getCities().then(c => {
-      setCities(c.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    Promise.all([getCities(), getCityCoverPhotos()]).then(([c, covers]) => {
+      setCities(c);
+      setCoverMap(covers);
       setLoading(false);
     });
   }, []);
@@ -82,6 +184,10 @@ export default function Home() {
   const totalAll = cities.reduce((a, c) => a + c.totalLines, 0);
   const totalOther = cities.reduce((a, c) => a + (c.otherLines || 0), 0);
   const totalTaken = totalCovered + totalOther;
+
+  const groups = useMemo(() => {
+    return groupCities(cities, groupBy, sortBy);
+  }, [cities, groupBy, sortBy]);
 
   return (
     <div className="min-h-[calc(100vh-52px)]">
@@ -149,9 +255,80 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="max-w-screen-2xl mx-auto px-5 py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {cities.map(city => <CityCard key={city.id} city={city} />)}
+        <div className="max-w-screen-2xl mx-auto px-5 py-6">
+          {/* Controls bar: Group by & Sort by */}
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-8 bg-surface/50 border border-border rounded px-4 py-3">
+            {/* Group by controls */}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-ink-faint uppercase tracking-wider">Group by:</span>
+              <div className="flex items-center gap-0.5 bg-bg border border-border rounded p-0.5">
+                {(['none', 'year', 'country'] as const).map(g => (
+                  <button
+                    key={g}
+                    onClick={() => setGroupBy(g)}
+                    className={`px-3 py-1 rounded font-mono text-xs transition-colors ${
+                      groupBy === g
+                        ? 'bg-surface text-gold border border-gold/40 font-500'
+                        : 'text-ink-faint hover:text-ink-dim border border-transparent'
+                    }`}
+                  >
+                    {g === 'none' ? 'None' : g === 'year' ? 'Year' : 'Country'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort by dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-ink-faint uppercase tracking-wider">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortBy)}
+                className="bg-bg border border-border rounded px-3 py-1.5 font-mono text-xs text-ink focus:border-muted outline-none transition-colors cursor-pointer"
+              >
+                <option value="date-desc">Trip Date (Newest first)</option>
+                <option value="date-asc">Trip Date (Oldest first)</option>
+                <option value="country">Country (A → Z)</option>
+                <option value="name">City Name (A → Z)</option>
+                <option value="coverage">Coverage % (High → Low)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Groups list */}
+          <div className="flex flex-col gap-10">
+            {groups.map(group => {
+              const groupCovered = group.cities.reduce((a, c) => a + c.coveredLines, 0);
+              const groupTotal = group.cities.reduce((a, c) => a + c.totalLines, 0);
+              const groupOther = group.cities.reduce((a, c) => a + (c.otherLines || 0), 0);
+
+              return (
+                <div key={group.key}>
+                  {group.title && (
+                    <div className="flex items-baseline justify-between border-b border-border pb-2.5 mb-5">
+                      <div className="flex items-baseline gap-3">
+                        <h2 className="font-display text-2xl font-700 text-ink tracking-wide">{group.title}</h2>
+                        <span className="font-mono text-xs text-ink-faint">
+                          {group.cities.length} {group.cities.length === 1 ? 'city' : 'cities'}
+                        </span>
+                      </div>
+                      <div className="font-mono text-xs text-ink-dim">
+                        <span className="text-ink font-500">{groupCovered}</span>/{groupTotal} lines covered
+                        {groupOther > 0 && <span className="text-ink-faint ml-1">(+{groupOther} other)</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                    {group.cities.map(city => {
+                      const slug = city.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                      const cover = coverMap[city.id] || coverMap[slug];
+                      return <CityCard key={city.id} city={city} cover={cover} />;
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

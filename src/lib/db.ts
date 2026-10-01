@@ -278,3 +278,14 @@ export async function importArchiveData(jsonContent: string): Promise<{ citiesCo
 
   return { citiesCount: data.cities.length, photosCount: data.photos?.length || 0 };
 }
+
+export async function getCityCoverPhotos(): Promise<Record<string, string>> {
+  const staticData = await loadStaticArchive();
+  const map: Record<string, string> = {};
+  for (const p of staticData.photos) {
+    if (!map[p.cityId]) {
+      map[p.cityId] = p.data;
+    }
+  }
+  return map;
+}
