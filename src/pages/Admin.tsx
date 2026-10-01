@@ -11,6 +11,7 @@ import { searchCities } from '../lib/cities';
 import type { CityPreset } from '../lib/cities';
 import type { City, Photo } from '../lib/types';
 import { sortPhotos } from '../lib/photoSort';
+import PhotoLightbox from '../components/PhotoLightbox';
 
 // Change this to your own password
 const ADMIN_PASSWORD = 'metro2024';
@@ -356,6 +357,8 @@ function PhotoUpload({ city, onBack }: PhotoUploadProps) {
   const [queue, setQueue] = useState<UploadItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -401,6 +404,8 @@ function PhotoUpload({ city, onBack }: PhotoUploadProps) {
   const removeExisting = async (id: string) => {
     await deletePhoto(id);
     setExisting(prev => prev.filter(p => p.id !== id));
+    setDeleteConfirmId(null);
+    if (previewIndex !== null) setPreviewIndex(null);
   };
 
   return (
@@ -484,27 +489,70 @@ function PhotoUpload({ city, onBack }: PhotoUploadProps) {
       {existing.length > 0 && (
         <div className="mt-10">
           <div className="font-mono text-xs text-ink-faint uppercase tracking-widest mb-4">
-            In Archive <span className="text-ink">({existing.length})</span>
+            In Archive <span className="text-ink">({existing.length})</span> · <span className="normal-case text-ink-dim">Click photo to preview</span>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-            {existing.map(p => (
-              <div key={p.id} className="relative group aspect-square bg-raised rounded overflow-hidden">
-                <img src={p.data} alt={p.caption} className="w-full h-full object-cover" />
-                {p.caption && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-bg/80 px-1 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] text-ink-dim line-clamp-1">{p.caption}</span>
-                  </div>
-                )}
-                <button
-                  onClick={() => removeExisting(p.id)}
-                  className="absolute inset-0 bg-bg/75 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-mono text-xs text-red-400"
-                >
-                  Delete
-                </button>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+            {existing.map((p, i) => (
+              <div
+                key={p.id}
+                onClick={() => setPreviewIndex(i)}
+                onMouseLeave={() => { if (deleteConfirmId === p.id) setDeleteConfirmId(null); }}
+                className="relative group aspect-square bg-raised rounded overflow-hidden cursor-pointer border border-border hover:border-gold/60 transition-all select-none"
+              >
+                <img
+                  src={p.data}
+                  alt={p.caption || p.filename}
+                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                />
+
+                {/* Filename / caption overlay on hover */}
+                <div className="absolute bottom-0 inset-x-0 bg-bg/85 px-1.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="font-mono text-[10px] text-ink line-clamp-1">{p.caption || p.filename}</span>
+                </div>
+
+                {/* Delete button with safety confirmation */}
+                <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {deleteConfirmId === p.id ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeExisting(p.id);
+                      }}
+                      className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded font-mono text-[10px] shadow transition-colors"
+                      title="Click again to confirm deletion"
+                    >
+                      Delete?
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirmId(p.id);
+                      }}
+                      className="w-6 h-6 rounded-full bg-bg/90 hover:bg-red-500 hover:text-white text-ink-faint flex items-center justify-center transition-colors shadow"
+                      title="Delete photo"
+                    >
+                      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* Fullscreen Photo Lightbox Preview */}
+      {previewIndex !== null && (
+        <PhotoLightbox
+          photos={existing}
+          index={previewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onNavigate={setPreviewIndex}
+        />
       )}
     </div>
   );
