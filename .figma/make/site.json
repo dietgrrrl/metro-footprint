@@ -1,0 +1,11 @@
+{
+  "title": "Axl's Metro Footprint",
+  "description": "Browse and explore metro station photos by city and line with an admin panel for secure photo uploads and trip data management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
