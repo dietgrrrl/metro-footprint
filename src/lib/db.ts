@@ -17,9 +17,28 @@ async function loadStaticArchive(): Promise<StaticArchive> {
     try {
       const base = import.meta.env.BASE_URL || './';
       const cleanBase = base.endsWith('/') ? base : base + '/';
-      const res = await fetch(`${cleanBase}data/archive.json`);
+      // Append cache buster and disable caching so client browsers don't serve stale cached JSON
+      const res = await fetch(`${cleanBase}data/archive.json?v=${Date.now()}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
       if (res.ok) {
         const data = await res.json();
+
+        // If the server archive was updated (e.g. pushed from dev or updated in repo),
+        // clear stale local city data so everyone immediately sees the latest published data.
+        if (data.generatedAt) {
+          const lastArchiveTime = localStorage.getItem('metro:archive_time');
+          if (lastArchiveTime !== data.generatedAt) {
+            localStorage.removeItem(CITIES_KEY);
+            localStorage.removeItem(DELETED_CITIES_KEY);
+            localStorage.setItem('metro:archive_time', data.generatedAt);
+          }
+        }
+
         const photos = (data.photos || []).map((p: Photo) => {
           if (p.data && !p.data.startsWith('data:') && !p.data.startsWith('http')) {
             return {
@@ -95,12 +114,30 @@ export async function getCities(): Promise<City[]> {
   // 2. Overlay local cities
   for (const c of local) {
     if (deleted.has(c.id)) continue;
-    const existingId = nameToId.get(c.name.toLowerCase());
-    if (existingId && existingId !== c.id) {
-      cityMap.delete(existingId);
+    const existingId = nameToId.get(c.name.toLowerCase()) || (cityMap.has(c.id) ? c.id : undefined);
+    const existing = existingId ? cityMap.get(existingId) : undefined;
+
+    if (existing) {
+      // Intelligently merge so empty/missing values in local don't wipe out static data
+      const merged: City = {
+        ...existing,
+        ...c,
+        id: existing.id,
+        tripDate: c.tripDate || existing.tripDate || '',
+        notes: c.notes || existing.notes || '',
+        totalLines: (c.totalLines && c.totalLines > 0) ? c.totalLines : existing.totalLines,
+        coveredLines: (c.coveredLines !== undefined && c.coveredLines > 0) ? c.coveredLines : existing.coveredLines,
+        otherLines: c.otherLines !== undefined ? c.otherLines : existing.otherLines,
+      };
+      if (existingId !== c.id) {
+        cityMap.delete(existingId);
+      }
+      cityMap.set(existing.id, merged);
+      nameToId.set(merged.name.toLowerCase(), existing.id);
+    } else {
+      cityMap.set(c.id, c);
+      nameToId.set(c.name.toLowerCase(), c.id);
     }
-    cityMap.set(c.id, c);
-    nameToId.set(c.name.toLowerCase(), c.id);
   }
 
   return Array.from(cityMap.values());

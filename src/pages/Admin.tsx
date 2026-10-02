@@ -633,6 +633,15 @@ function Dashboard({ cities, onAdd, onEdit, onPhotos, onDelete }: DashboardProps
     }
   };
 
+  const handleResetToServer = () => {
+    if (confirm('This will clear any local uncommitted browser edits and reload the latest data published on GitHub. Continue?')) {
+      localStorage.removeItem('metro:cities');
+      localStorage.removeItem('metro:deleted_cities');
+      localStorage.removeItem('metro:archive_time');
+      window.location.reload();
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
@@ -644,6 +653,13 @@ function Dashboard({ cities, onAdd, onEdit, onPhotos, onDelete }: DashboardProps
           )}
         </div>
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleResetToServer}
+            className="px-3.5 py-2 border border-border text-ink-faint rounded font-mono text-xs hover:text-ink hover:border-muted transition-colors select-none"
+            title="Reloads fresh data from GitHub, clearing any stale browser cache"
+          >
+            🔄 Reset Cache
+          </button>
           <button
             onClick={handleSyncToProject}
             disabled={syncing}
