@@ -17,6 +17,7 @@ const DIR_NAME_MAP = {
   'Hongkong': 'Hong Kong',
   'Japan-Kyoto': 'Kyoto',
   'Japan-Osaka': 'Osaka',
+  'Japan-Tokyo': 'Tokyo',
   'Japan-Yokohama': 'Yokohama',
   'Korea-Busan': 'Busan',
   'Korea-Seoul': 'Seoul',

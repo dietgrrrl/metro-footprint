@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-01T14:52:51.128Z",
+  "generatedAt": "2026-10-02T03:31:21.410Z",
   "cities": [
     {
       "id": "beijing",
@@ -156,6 +156,32 @@
       "otherLines": 0,
       "systemName": "Kyoto Municipal Subway",
       "createdAt": "2026-10-01T14:52:50.564Z"
+    },
+    {
+      "id": "osaka",
+      "name": "Osaka",
+      "country": "Japan",
+      "lat": 34.6937,
+      "lon": 135.5023,
+      "tripDate": "",
+      "totalLines": 9,
+      "coveredLines": 1,
+      "otherLines": 0,
+      "systemName": "Osaka Metro",
+      "createdAt": "2026-10-02T03:30:55.439Z"
+    },
+    {
+      "id": "tokyo",
+      "name": "Tokyo",
+      "country": "Japan",
+      "lat": 35.6762,
+      "lon": 139.6503,
+      "tripDate": "",
+      "totalLines": 13,
+      "coveredLines": 0,
+      "otherLines": 14,
+      "systemName": "Tokyo Metro + Toei Subway",
+      "createdAt": "2026-10-02T03:31:21.408Z"
     },
     {
       "id": "busan",
@@ -757,11 +783,25 @@
       "data": "photos/Dubai/Dubai-tram.jpeg"
     },
     {
+      "id": "foshan-foshan-2-jpg",
+      "cityId": "foshan",
+      "filename": "Foshan-2.jpg",
+      "caption": "",
+      "data": "photos/Foshan/Foshan-2.jpg"
+    },
+    {
       "id": "foshan-foshan-3-jpg",
       "cityId": "foshan",
       "filename": "Foshan-3.jpg",
       "caption": "",
       "data": "photos/Foshan/Foshan-3.jpg"
+    },
+    {
+      "id": "foshan-foshan-gf-jpg",
+      "cityId": "foshan",
+      "filename": "Foshan-GF.jpg",
+      "caption": "",
+      "data": "photos/Foshan/Foshan-GF.jpg"
     },
     {
       "id": "guangzhou-guangzhou-10-jpg",
@@ -776,6 +816,20 @@
       "filename": "Guangzhou-12.jpg",
       "caption": "",
       "data": "photos/Guangzhou/Guangzhou-12.jpg"
+    },
+    {
+      "id": "guangzhou-guangzhou-18-jpeg",
+      "cityId": "guangzhou",
+      "filename": "Guangzhou-18.jpeg",
+      "caption": "",
+      "data": "photos/Guangzhou/Guangzhou-18.jpeg"
+    },
+    {
+      "id": "guangzhou-guangzhou-3a-jpeg",
+      "cityId": "guangzhou",
+      "filename": "Guangzhou-3a.jpeg",
+      "caption": "",
+      "data": "photos/Guangzhou/Guangzhou-3a.jpeg"
     },
     {
       "id": "hangzhou-hangzhou-1-jpg",
@@ -937,6 +991,111 @@
       "filename": "Kyoto-2.jpg",
       "caption": "",
       "data": "photos/Japan-Kyoto/Kyoto-2.jpg"
+    },
+    {
+      "id": "osaka-osaka-1-jpeg",
+      "cityId": "osaka",
+      "filename": "Osaka-1.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Osaka/Osaka-1.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-f-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-F.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-F.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-g-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-G.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-G.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-m-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-M.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-M.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-n-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-N.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-N.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-t-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-T.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-T.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-toei-a-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-Toei-A.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-Toei-A.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-toei-i-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-Toei-I.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-Toei-I.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-toei-s-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-Toei-S.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-Toei-S.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-y-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-Y.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-Y.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-z-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-Z.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-Z.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-other-jk-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-other-JK.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-other-JK.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-other-jt-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-other-JT.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-other-JT.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-other-ks-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-other-KS.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-other-KS.jpeg"
+    },
+    {
+      "id": "tokyo-tokyo-other-green-jpeg",
+      "cityId": "tokyo",
+      "filename": "Tokyo-other-green.jpeg",
+      "caption": "",
+      "data": "photos/Japan-Tokyo/Tokyo-other-green.jpeg"
     },
     {
       "id": "busan-busan-1-jpg",
