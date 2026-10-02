@@ -10,8 +10,15 @@ const W = 1200;
 const H = 540;
 
 function project(lat: number, lon: number): [number, number] {
-  return [(lon + 180) / 360 * W, (90 - lat) / 180 * H];
+  return [((lon + 180) / 360) * W, ((90 - lat) / 180) * H];
 }
+
+// Guangzhou coordinates: 23.1291° N, 113.2644° E
+// project(23.1291, 113.2644) gives x ≈ 978, y ≈ 201
+// At zoom 1 (vW = 1200), center is at minX + 600.
+// Setting initial pan.x = 978 - 600 = 378 puts Guangzhou dead-center on map load.
+const INITIAL_PAN = { x: 378, y: 0 };
+const OFFSETS = [-W, 0, W];
 
 const LANDMASSES = [
   'M50,56 L120,62 L165,90 L172,118 L165,131 L175,158 L192,169 L210,200 L300,228 L322,207 L344,151 L379,125 L420,115 L380,91 L350,61 L330,48 L280,48 L230,45 L175,45 L120,50',
@@ -41,23 +48,24 @@ export default function WorldMap({ cities }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const [hovered, setHovered] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; city: City } | null>(null);
 
-  // Zoom & Pan state
+  // Zoom & Pan state (starting centered on Guangzhou)
   const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState(INITIAL_PAN);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
   const hasMoved = useRef(false);
 
   const clampPan = useCallback((pX: number, pY: number, z: number) => {
-    const vW = W / z;
     const vH = H / z;
-    const maxX = (W - vW) / 2;
     const maxY = (H - vH) / 2;
+    // Allow panning across horizontally wrapped world
+    const minPanX = INITIAL_PAN.x - W;
+    const maxPanX = INITIAL_PAN.x + W;
     return {
-      x: Math.max(-maxX, Math.min(maxX, pX)),
+      x: Math.max(minPanX, Math.min(maxPanX, pX)),
       y: Math.max(-maxY, Math.min(maxY, pY)),
     };
   }, []);
@@ -66,7 +74,7 @@ export default function WorldMap({ cities }: Props) {
     setZoom(prevZoom => {
       const nextZoom = Math.max(1, Math.min(8, prevZoom * factor));
       if (nextZoom === 1) {
-        setPan({ x: 0, y: 0 });
+        setPan(INITIAL_PAN);
         return 1;
       }
       if (clientX !== undefined && clientY !== undefined && svgRef.current) {
@@ -102,7 +110,7 @@ export default function WorldMap({ cities }: Props) {
   }, [handleZoom]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only left click
+    if (e.button !== 0) return;
     setIsDragging(true);
     hasMoved.current = false;
     dragStart.current = { x: e.clientX, y: e.clientY };
@@ -131,7 +139,7 @@ export default function WorldMap({ cities }: Props) {
 
   const resetZoom = () => {
     setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setPan(INITIAL_PAN);
   };
 
   // ViewBox dimensions based on zoom & pan
@@ -139,8 +147,6 @@ export default function WorldMap({ cities }: Props) {
   const vH = H / zoom;
   const minX = (W - vW) / 2 + pan.x;
   const minY = (H - vH) / 2 + pan.y;
-
-  const hoveredCity = cities.find(c => c.id === hovered);
 
   return (
     <div
@@ -158,93 +164,122 @@ export default function WorldMap({ cities }: Props) {
         className="absolute inset-0 w-full h-full"
         style={{ background: '#09111f' }}
       >
-        {/* Graticule */}
-        {GRATICULE_LONS.map(lon => {
-          const [x] = project(0, lon);
-          return <line key={lon} x1={x} y1={0} x2={x} y2={H} stroke="#1e3554" strokeWidth={0.5 / zoom} opacity={0.5} />;
-        })}
+        {/* Latitudes & horizontal lines across wrapped width */}
         {GRATICULE_LATS.map(lat => {
           const [, y] = project(lat, 0);
-          return <line key={lat} x1={0} y1={y} x2={W} y2={y} stroke="#1e3554" strokeWidth={0.5 / zoom} opacity={0.5} />;
+          return <line key={lat} x1={-W} y1={y} x2={2 * W} y2={y} stroke="#1e3554" strokeWidth={0.5 / zoom} opacity={0.5} />;
         })}
-
-        {/* Equator */}
-        <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#264268" strokeWidth={1 / zoom} opacity={0.8} />
-        {/* Tropics */}
+        <line x1={-W} y1={H / 2} x2={2 * W} y2={H / 2} stroke="#264268" strokeWidth={1 / zoom} opacity={0.8} />
         {[23.5, -23.5].map(lat => {
           const [, y] = project(lat, 0);
-          return <line key={lat} x1={0} y1={y} x2={W} y2={y} stroke="#264268" strokeWidth={0.5 / zoom} strokeDasharray={`${4 / zoom} ${4 / zoom}`} opacity={0.5} />;
+          return <line key={lat} x1={-W} y1={y} x2={2 * W} y2={y} stroke="#264268" strokeWidth={0.5 / zoom} strokeDasharray={`${4 / zoom} ${4 / zoom}`} opacity={0.5} />;
         })}
 
-        {/* Landmasses */}
-        {LANDMASSES.map((d, i) => (
-          <path key={i} d={d + ' Z'} fill="#0d1929" stroke="#1e3554" strokeWidth={0.8 / zoom} />
+        {/* Wrapped World: Landmasses & Graticule */}
+        {OFFSETS.map(offsetX => (
+          <g key={offsetX}>
+            {GRATICULE_LONS.map(lon => {
+              const [x] = project(0, lon);
+              return (
+                <line
+                  key={`${offsetX}-${lon}`}
+                  x1={x + offsetX}
+                  y1={0}
+                  x2={x + offsetX}
+                  y2={H}
+                  stroke="#1e3554"
+                  strokeWidth={0.5 / zoom}
+                  opacity={0.5}
+                />
+              );
+            })}
+
+            {LANDMASSES.map((d, i) => (
+              <path
+                key={`${offsetX}-${i}`}
+                d={d + ' Z'}
+                transform={`translate(${offsetX}, 0)`}
+                fill="#0d1929"
+                stroke="#1e3554"
+                strokeWidth={0.8 / zoom}
+              />
+            ))}
+          </g>
         ))}
 
-        {/* City pins */}
-        {cities.map(city => {
-          const [cx, cy] = project(city.lat, city.lon);
-          const isHov = hovered === city.id;
-          const pct = city.totalLines > 0 ? city.coveredLines / city.totalLines : 0;
-          const dotColor = pct >= 1 ? '#f5c518' : pct >= 0.5 ? '#8aa8d4' : '#4a6a8a';
+        {/* City pins across visible offsets */}
+        {OFFSETS.map(offsetX => (
+          <g key={`pins-${offsetX}`}>
+            {cities.map(city => {
+              const [rawX, cy] = project(city.lat, city.lon);
+              const cx = rawX + offsetX;
 
-          // Scaled radiuses so pins stay clear when zoomed
-          const baseRadius = 8 / Math.pow(zoom, 0.4);
-          const innerRadius = 4 / Math.pow(zoom, 0.4);
+              // Only render interactive pins within or near the visible viewport
+              if (cx < minX - 40 || cx > minX + vW + 40) return null;
 
-          return (
-            <g
-              key={city.id}
-              className="cursor-pointer"
-              onMouseEnter={() => {
-                setHovered(city.id);
-                if (svgRef.current) {
-                  const rect = svgRef.current.getBoundingClientRect();
-                  const px = ((cx - minX) / vW) * rect.width;
-                  const py = ((cy - minY) / vH) * rect.height;
-                  setTooltip({ x: px, y: py });
-                }
-              }}
-              onMouseLeave={() => { setHovered(null); setTooltip(null); }}
-              onClick={e => {
-                e.stopPropagation();
-                if (!hasMoved.current) {
-                  navigate(`/city/${city.id}`);
-                }
-              }}
-            >
-              {/* Subtle ambient glow aura */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={baseRadius * 1.4}
-                fill={dotColor}
-                opacity={isHov ? 0.35 : 0.12}
-                className={isHov ? 'transition-all duration-300' : 'metro-glow'}
-                style={{ transformOrigin: `${cx}px ${cy}px` }}
-              />
-              {/* Outer ring */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={isHov ? baseRadius * 1.2 : baseRadius}
-                fill="none"
-                stroke={dotColor}
-                strokeWidth={(isHov ? 1.8 : 1.2) / Math.pow(zoom, 0.4)}
-                opacity={isHov ? 1 : 0.75}
-                className="transition-all duration-200"
-              />
-              {/* Inner dot */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={isHov ? innerRadius * 1.2 : innerRadius}
-                fill={dotColor}
-                className="transition-all duration-200"
-              />
-            </g>
-          );
-        })}
+              const pinKey = `${city.id}-${offsetX}`;
+              const isHov = hovered === pinKey;
+              const pct = city.totalLines > 0 ? city.coveredLines / city.totalLines : 0;
+              const dotColor = pct >= 1 ? '#f5c518' : pct >= 0.5 ? '#8aa8d4' : '#4a6a8a';
+
+              const baseRadius = 8 / Math.pow(zoom, 0.4);
+              const innerRadius = 4 / Math.pow(zoom, 0.4);
+
+              return (
+                <g
+                  key={pinKey}
+                  className="cursor-pointer"
+                  onMouseEnter={() => {
+                    setHovered(pinKey);
+                    if (svgRef.current) {
+                      const rect = svgRef.current.getBoundingClientRect();
+                      const px = ((cx - minX) / vW) * rect.width;
+                      const py = ((cy - minY) / vH) * rect.height;
+                      setTooltip({ x: px, y: py, city });
+                    }
+                  }}
+                  onMouseLeave={() => { setHovered(null); setTooltip(null); }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (!hasMoved.current) {
+                      navigate(`/city/${city.id}`);
+                    }
+                  }}
+                >
+                  {/* Subtle ambient glow aura */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={baseRadius * 1.4}
+                    fill={dotColor}
+                    opacity={isHov ? 0.35 : 0.12}
+                    className={isHov ? 'transition-all duration-300' : 'metro-glow'}
+                    style={{ transformOrigin: `${cx}px ${cy}px` }}
+                  />
+                  {/* Outer ring */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={isHov ? baseRadius * 1.2 : baseRadius}
+                    fill="none"
+                    stroke={dotColor}
+                    strokeWidth={(isHov ? 1.8 : 1.2) / Math.pow(zoom, 0.4)}
+                    opacity={isHov ? 1 : 0.75}
+                    className="transition-all duration-200"
+                  />
+                  {/* Inner dot */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={isHov ? innerRadius * 1.2 : innerRadius}
+                    fill={dotColor}
+                    className="transition-all duration-200"
+                  />
+                </g>
+              );
+            })}
+          </g>
+        ))}
       </svg>
 
       {/* Map Zoom Controls (Top Right) */}
@@ -263,10 +298,10 @@ export default function WorldMap({ cities }: Props) {
         >
           −
         </button>
-        {zoom > 1 && (
+        {(zoom !== 1 || pan.x !== INITIAL_PAN.x || pan.y !== INITIAL_PAN.y) && (
           <button
             onClick={resetZoom}
-            title="Reset View"
+            title="Reset to Guangzhou center"
             className="px-2 h-7 rounded flex items-center justify-center font-mono text-xs text-gold hover:bg-surface transition-colors border-l border-border ml-0.5"
           >
             Reset
@@ -278,28 +313,28 @@ export default function WorldMap({ cities }: Props) {
       </div>
 
       {/* Tooltip */}
-      {hoveredCity && tooltip && (
+      {tooltip && (
         <div
           className="pointer-events-none absolute z-30 bg-surface border border-border rounded p-3 min-w-36 shadow-xl backdrop-blur-sm"
           style={{ left: tooltip.x + 14, top: tooltip.y, transform: 'translateY(-50%)' }}
         >
-          <div className="font-display text-lg font-700 text-ink leading-none">{hoveredCity.name}</div>
-          <div className="font-mono text-xs text-ink-faint mt-0.5">{hoveredCity.country}</div>
+          <div className="font-display text-lg font-700 text-ink leading-none">{tooltip.city.name}</div>
+          <div className="font-mono text-xs text-ink-faint mt-0.5">{tooltip.city.country}</div>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-0.5 bg-border rounded-full overflow-hidden">
               <div
                 className="h-full bg-gold rounded-full"
-                style={{ width: `${hoveredCity.totalLines > 0 ? (hoveredCity.coveredLines / hoveredCity.totalLines) * 100 : 0}%` }}
+                style={{ width: `${tooltip.city.totalLines > 0 ? (tooltip.city.coveredLines / tooltip.city.totalLines) * 100 : 0}%` }}
               />
             </div>
             <span className="font-mono text-xs text-ink-dim whitespace-nowrap">
-              {hoveredCity.coveredLines}/{hoveredCity.totalLines}
-              {hoveredCity.otherLines ? ` (+${hoveredCity.otherLines})` : ''}
+              {tooltip.city.coveredLines}/{tooltip.city.totalLines}
+              {tooltip.city.otherLines ? ` (+${tooltip.city.otherLines})` : ''}
             </span>
           </div>
-          {hoveredCity.tripDate && (
+          {tooltip.city.tripDate && (
             <div className="font-mono text-xs text-ink-faint mt-1">
-              {new Date(hoveredCity.tripDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              {new Date(tooltip.city.tripDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </div>
           )}
         </div>
