@@ -94,7 +94,7 @@ export default function CityDetail() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-mono text-sm font-600 text-ink rotate-90">{pct}%</span>
+                <span className="font-mono text-sm font-600 text-ink">{pct}%</span>
               </div>
             </div>
             <div>
@@ -110,14 +110,9 @@ export default function CityDetail() {
           </div>
         </div>
 
-        {/* Coverage bar */}
-        <div className="mt-6 h-1 bg-border rounded-full overflow-hidden">
-          <div className="h-full bg-gold rounded-full transition-all" style={{ width: `${pct}%` }} />
-        </div>
-
         {/* Line ticks */}
         {city.totalLines > 0 && (
-          <div className="mt-2 flex gap-0.5">
+          <div className="mt-6 flex gap-1">
             {Array.from({ length: city.totalLines }).map((_, i) => (
               <div
                 key={i}

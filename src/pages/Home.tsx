@@ -135,7 +135,7 @@ function CityCard({ city, cover }: { city: City; cover?: string }) {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-mono text-[8px] text-ink-dim rotate-90">{pct}%</span>
+            <span className="font-mono text-[8px] text-ink-dim">{pct}%</span>
           </div>
         </div>
       </div>
