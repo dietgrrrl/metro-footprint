@@ -163,13 +163,13 @@ function CityCard({ city, cover }: { city: City; cover?: string }) {
 }
 
 export default function Home() {
-  const [view, setView] = useState<View>('map');
+  const [view, setView] = useState<View>('list');
   const [cities, setCities] = useState<City[]>([]);
   const [coverMap, setCoverMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   // List view sorting & grouping state
-  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  const [groupBy, setGroupBy] = useState<GroupBy>('year');
   const [sortBy, setSortBy] = useState<SortBy>('date-desc');
 
   useEffect(() => {
@@ -193,28 +193,54 @@ export default function Home() {
     <div className="min-h-[calc(100vh-52px)]">
       {/* Stats + view toggle */}
       <div className="border-b border-border bg-surface/40">
-        <div className="max-w-screen-2xl mx-auto px-5 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-5">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-5 py-2.5 sm:py-2 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <span className="font-mono text-xs text-ink-faint">
-              <span className="text-ink font-500">{cities.length}</span> cities
+              <span className="text-ink font-600">{cities.length}</span> cities
             </span>
+            <span className="text-border hidden xs:inline">·</span>
             <span className="font-mono text-xs text-ink-faint">
-              <span className="text-ink font-500">{totalCovered}</span>/{totalAll} lines covered
+              <span className="text-ink font-600">{totalCovered}</span>/{totalAll} lines covered
               {totalOther > 0 && (
-                <span className="text-ink-dim ml-1.5">(+{totalOther} other, totally {totalTaken} lines taken)</span>
+                <span className="text-ink-dim ml-1.5">(+{totalOther} other{totalTaken ? `, totally ${totalTaken} lines taken` : ''})</span>
               )}
             </span>
           </div>
-          <div className="flex items-center gap-0.5 bg-bg border border-border rounded p-0.5">
-            {(['map', 'list'] as const).map(v => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`px-3 py-1 rounded font-mono text-xs capitalize transition-colors ${view === v ? 'bg-surface text-ink' : 'text-ink-faint hover:text-ink-dim'}`}
-              >
-                {v}
-              </button>
-            ))}
+
+          {/* Accessible, thumb-friendly Map / List toggle */}
+          <div className="flex items-center bg-bg border border-border rounded-lg p-1 shadow-sm" role="tablist" aria-label="Explore view mode">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'list'}
+              onClick={() => setView('list')}
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-md font-mono text-xs sm:text-xs font-500 transition-all min-h-[42px] sm:min-h-[32px] min-w-[76px] select-none ${
+                view === 'list'
+                  ? 'bg-surface text-gold border border-gold/40 shadow-sm'
+                  : 'text-ink-faint hover:text-ink border border-transparent active:bg-raised'
+              }`}
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span>List</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'map'}
+              onClick={() => setView('map')}
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-md font-mono text-xs sm:text-xs font-500 transition-all min-h-[42px] sm:min-h-[32px] min-w-[76px] select-none ${
+                view === 'map'
+                  ? 'bg-surface text-gold border border-gold/40 shadow-sm'
+                  : 'text-ink-faint hover:text-ink border border-transparent active:bg-raised'
+              }`}
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <span>Map</span>
+            </button>
           </div>
         </div>
       </div>
@@ -257,18 +283,19 @@ export default function Home() {
       ) : (
         <div className="max-w-screen-2xl mx-auto px-5 py-6">
           {/* Controls bar: Group by & Sort by */}
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-8 bg-surface/50 border border-border rounded px-4 py-3">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-6 sm:mb-8 bg-surface/50 border border-border rounded-lg px-4 py-3">
             {/* Group by controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <span className="font-mono text-xs text-ink-faint uppercase tracking-wider">Group by:</span>
-              <div className="flex items-center gap-0.5 bg-bg border border-border rounded p-0.5">
+              <div className="flex items-center bg-bg border border-border rounded-lg p-0.5">
                 {(['none', 'year', 'country'] as const).map(g => (
                   <button
                     key={g}
+                    type="button"
                     onClick={() => setGroupBy(g)}
-                    className={`px-3 py-1 rounded font-mono text-xs transition-colors ${
+                    className={`px-3.5 py-2 sm:py-1 rounded font-mono text-xs transition-colors min-h-[38px] sm:min-h-[28px] select-none ${
                       groupBy === g
-                        ? 'bg-surface text-gold border border-gold/40 font-500'
+                        ? 'bg-surface text-gold border border-gold/40 font-500 shadow-sm'
                         : 'text-ink-faint hover:text-ink-dim border border-transparent'
                     }`}
                   >
@@ -279,12 +306,12 @@ export default function Home() {
             </div>
 
             {/* Sort by dropdown */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <span className="font-mono text-xs text-ink-faint uppercase tracking-wider">Sort by:</span>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as SortBy)}
-                className="bg-bg border border-border rounded px-3 py-1.5 font-mono text-xs text-ink focus:border-muted outline-none transition-colors cursor-pointer"
+                className="bg-bg border border-border rounded-lg px-3 py-2 sm:py-1.5 font-mono text-xs text-ink focus:border-muted outline-none transition-colors cursor-pointer min-h-[38px] sm:min-h-[28px]"
               >
                 <option value="date-desc">Trip Date (Newest first)</option>
                 <option value="date-asc">Trip Date (Oldest first)</option>
