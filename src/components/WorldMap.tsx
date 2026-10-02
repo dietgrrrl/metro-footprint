@@ -1,29 +1,30 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import type { City } from '../lib/types';
+import { WORLD_LAND_PATH, WORLD_BORDER_PATH } from './mapData';
 
 interface Props {
   cities: City[];
 }
 
 const W = 1200;
-const H = 540;
+const H = 600;
 
 function project(lat: number, lon: number): [number, number] {
   return [((lon + 180) / 360) * W, ((90 - lat) / 180) * H];
 }
 
 // Guangzhou coordinates: 23.1291° N, 113.2644° E
-// project(23.1291, 113.2644) gives x ≈ 978, y ≈ 201
+// project(23.1291, 113.2644) gives x ≈ 978, y ≈ 223
 // At zoom 1 (vW = 1200), center is at minX + 600.
 // Setting initial pan.x = 978 - 600 = 378 puts Guangzhou dead-center on desktop.
 const DESKTOP_VIEW = { zoom: 1, pan: { x: 378, y: 0 } };
 
-// On mobile screens, zoom in to China (around lat 30°N, lon 113°E).
-// project(30, 113) ≈ (977, 180).
-// At zoom 2.5: vW = 480, vH = 216.
-// pan.x = 977 - 600 = 377. pan.y = 180 - 270 = -90.
-const MOBILE_VIEW = { zoom: 2.5, pan: { x: 377, y: -90 } };
+// On mobile screens, zoom in to China (around lat 31°N, lon 113°E).
+// project(31, 113) ≈ (977, 197).
+// At zoom 2.5: vW = 480, vH = 240.
+// pan.x = 977 - 600 = 377. pan.y = 197 - 300 = -103.
+const MOBILE_VIEW = { zoom: 2.5, pan: { x: 377, y: -100 } };
 
 function isMobileViewport(): boolean {
   return typeof window !== 'undefined' && window.innerWidth < 768;
@@ -34,25 +35,6 @@ function getDefaultView(isMobile: boolean) {
 }
 
 const OFFSETS = [-W, 0, W];
-
-const LANDMASSES = [
-  'M50,56 L120,62 L165,90 L172,118 L165,131 L175,158 L192,169 L210,200 L300,228 L322,207 L344,151 L379,125 L420,115 L380,91 L350,61 L330,48 L280,48 L230,45 L175,45 L120,50',
-  'M403,91 L475,91 L489,38 L440,20 L395,38',
-  'M445,63 L480,60 L488,73 L470,82 L448,77',
-  'M347,234 L435,254 L413,338 L385,375 L370,432 L337,424 L308,370 L296,310 L299,262',
-  'M513,153 L513,133 L523,119 L554,90 L591,63 L625,63 L645,99 L625,143 L609,153 L579,161 L600,135 L573,153 L563,153',
-  'M560,90 L575,60 L600,55 L610,72 L595,90 L578,98',
-  'M521,165 L576,171 L635,180 L692,234 L661,270 L594,375 L583,372 L519,320 L487,233 L487,210',
-  'M665,180 L706,180 L715,215 L698,235 L669,220 L651,200',
-  'M616,153 L648,144 L671,135 L700,144 L720,153 L750,207 L769,207 L795,200 L813,180 L808,207 L768,234 L842,248 L895,252 L892,207 L920,205 L950,166 L1000,171 L1045,144 L1096,65 L1050,36 L940,38 L855,36 L780,36 L720,45 L660,63 L635,81 L620,100',
-  'M765,162 L800,157 L812,200 L781,249 L755,232 L739,198',
-  'M880,212 L927,203 L950,230 L927,252 L892,243',
-  'M898,335 L985,305 L1040,310 L1067,333 L1065,385 L1025,376 L965,373 L935,378 L900,365',
-  'M1080,372 L1097,365 L1103,385 L1087,393',
-  'M1040,130 L1060,118 L1078,144 L1063,162 L1043,153',
-  'M484,87 L502,81 L514,99 L499,111 L481,104',
-  'M1093,90 L1120,72 L1140,90 L1120,117 L1100,110',
-];
 
 const GRATICULE_LONS = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
 const GRATICULE_LATS = [60, 30, -30, -60];
@@ -280,7 +262,7 @@ export default function WorldMap({ cities }: Props) {
   return (
     <div
       ref={containerRef}
-      className={`relative w-full overflow-hidden select-none touch-none h-[50vh] min-h-[300px] sm:h-auto sm:min-h-0 sm:pb-[45%] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`relative w-full overflow-hidden select-none touch-none h-[50vh] min-h-[300px] sm:h-auto sm:min-h-0 sm:pb-[50%] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -303,7 +285,7 @@ export default function WorldMap({ cities }: Props) {
           return <line key={lat} x1={-W} y1={y} x2={2 * W} y2={y} stroke="#264268" strokeWidth={0.5 / zoom} strokeDasharray={`${4 / zoom} ${4 / zoom}`} opacity={0.5} />;
         })}
 
-        {/* Wrapped World: Landmasses & Graticule */}
+        {/* Wrapped World: Landmasses, Country Borders & Graticule */}
         {OFFSETS.map(offsetX => (
           <g key={offsetX}>
             {GRATICULE_LONS.map(lon => {
@@ -322,16 +304,24 @@ export default function WorldMap({ cities }: Props) {
               );
             })}
 
-            {LANDMASSES.map((d, i) => (
-              <path
-                key={`${offsetX}-${i}`}
-                d={d + ' Z'}
-                transform={`translate(${offsetX}, 0)`}
-                fill="#0d1929"
-                stroke="#1e3554"
-                strokeWidth={0.8 / zoom}
-              />
-            ))}
+            {/* Real world landmasses */}
+            <path
+              d={WORLD_LAND_PATH}
+              transform={`translate(${offsetX}, 0)`}
+              fill="#0d1929"
+              stroke="#1e3554"
+              strokeWidth={0.8 / zoom}
+            />
+
+            {/* Real world country borders */}
+            <path
+              d={WORLD_BORDER_PATH}
+              transform={`translate(${offsetX}, 0)`}
+              fill="none"
+              stroke="#15263d"
+              strokeWidth={0.5 / zoom}
+              strokeDasharray={`${3 / zoom} ${3 / zoom}`}
+            />
           </g>
         ))}
 
