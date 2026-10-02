@@ -38,14 +38,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@keyframes metro-ping {
-  0% { transform: scale(1); opacity: 0.7; }
-  70% { transform: scale(2.2); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
+@keyframes metro-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.22;
+  }
 }
 
-.metro-ping {
-  animation: metro-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+.metro-glow {
+  animation: metro-glow 4s ease-in-out infinite;
 }
 
 .line-scroll {

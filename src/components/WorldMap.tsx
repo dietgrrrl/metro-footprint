@@ -213,16 +213,35 @@ export default function WorldMap({ cities }: Props) {
                 }
               }}
             >
-              {/* Pulse ring */}
+              {/* Subtle ambient glow aura */}
               <circle
-                cx={cx} cy={cy} r={baseRadius * 1.5} fill={dotColor} opacity={isHov ? 0.3 : 0.15}
-                className={isHov ? '' : 'metro-ping'}
+                cx={cx}
+                cy={cy}
+                r={baseRadius * 1.4}
+                fill={dotColor}
+                opacity={isHov ? 0.35 : 0.12}
+                className={isHov ? 'transition-all duration-300' : 'metro-glow'}
                 style={{ transformOrigin: `${cx}px ${cy}px` }}
               />
               {/* Outer ring */}
-              <circle cx={cx} cy={cy} r={isHov ? baseRadius * 1.25 : baseRadius} fill="none" stroke={dotColor} strokeWidth={1.5 / Math.pow(zoom, 0.4)} opacity={0.9} />
+              <circle
+                cx={cx}
+                cy={cy}
+                r={isHov ? baseRadius * 1.2 : baseRadius}
+                fill="none"
+                stroke={dotColor}
+                strokeWidth={(isHov ? 1.8 : 1.2) / Math.pow(zoom, 0.4)}
+                opacity={isHov ? 1 : 0.75}
+                className="transition-all duration-200"
+              />
               {/* Inner dot */}
-              <circle cx={cx} cy={cy} r={isHov ? innerRadius * 1.3 : innerRadius} fill={dotColor} />
+              <circle
+                cx={cx}
+                cy={cy}
+                r={isHov ? innerRadius * 1.2 : innerRadius}
+                fill={dotColor}
+                className="transition-all duration-200"
+              />
             </g>
           );
         })}
