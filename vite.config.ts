@@ -35,8 +35,47 @@ export default defineConfig(({ mode }) => {
               req.on('data', chunk => { body += chunk; });
               req.on('end', () => {
                 try {
+                  const payload = JSON.parse(body);
+                  const photosDir = path.resolve(__dirname, 'public/photos');
+                  if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
+                  const existingFolders = fs.readdirSync(photosDir);
+
+                  const cityMap = new Map<string, string>();
+                  if (Array.isArray(payload.cities)) {
+                    for (const c of payload.cities) cityMap.set(c.id, c.name);
+                  }
+
+                  const findFolder = (cityName: string) => {
+                    const norm = cityName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    for (const f of existingFolders) {
+                      const fNorm = f.toLowerCase().replace(/[^a-z0-9]/g, '');
+                      if (fNorm === norm || fNorm === 'japan' + norm || fNorm === 'korea' + norm) return f;
+                    }
+                    return cityName;
+                  };
+
+                  if (Array.isArray(payload.photos)) {
+                    for (const p of payload.photos) {
+                      if (p.data && typeof p.data === 'string' && p.data.startsWith('data:')) {
+                        const cityName = cityMap.get(p.cityId) || p.cityId || 'Misc';
+                        const folder = findFolder(cityName);
+                        const targetFolder = path.join(photosDir, folder);
+                        if (!fs.existsSync(targetFolder)) fs.mkdirSync(targetFolder, { recursive: true });
+
+                        const safeFilename = (p.filename || `${p.id}.jpg`).replace(/[^a-zA-Z0-9._-]/g, '_');
+                        const targetFile = path.join(targetFolder, safeFilename);
+
+                        const match = p.data.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+                        if (match) {
+                          fs.writeFileSync(targetFile, Buffer.from(match[2], 'base64'));
+                        }
+                        p.data = `/photos/${folder}/${safeFilename}`;
+                      }
+                    }
+                  }
+
                   const targetPath = path.resolve(__dirname, 'public/data/archive.json');
-                  fs.writeFileSync(targetPath, body, 'utf-8');
+                  fs.writeFileSync(targetPath, JSON.stringify(payload, null, 2), 'utf-8');
                   res.setHeader('Content-Type', 'application/json');
                   res.end(JSON.stringify({ ok: true }));
                 } catch (e: any) {
