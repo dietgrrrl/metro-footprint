@@ -608,14 +608,50 @@ function Dashboard({ cities, onAdd, onEdit, onPhotos, onDelete }: DashboardProps
     }
   };
 
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  const handleSyncToProject = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const data = await exportArchiveData();
+      const res = await fetch('/api/save-archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data, null, 2),
+      });
+      if (res.ok) {
+        setSyncMessage('Saved! Ready to push to GitHub.');
+      } else {
+        throw new Error('Save endpoint failed');
+      }
+    } catch (err: any) {
+      setSyncMessage('Failed to save to project files.');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
           <div className="font-display text-3xl font-700 text-ink tracking-wide">Cities</div>
           <div className="font-mono text-xs text-ink-faint mt-1">Manage, add, and export your metro archive</div>
+          {syncMessage && (
+            <div className="font-mono text-xs text-gold mt-1 animate-pulse">{syncMessage}</div>
+          )}
         </div>
         <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleSyncToProject}
+            disabled={syncing}
+            className="px-3.5 py-2 border border-gold/40 text-gold rounded font-mono text-xs hover:bg-gold/10 transition-colors disabled:opacity-50"
+            title="Saves your browser edits directly into public/data/archive.json so you can push to GitHub"
+          >
+            {syncing ? 'Saving…' : '💾 Save to Project'}
+          </button>
           <label className="cursor-pointer px-3.5 py-2 border border-border rounded font-mono text-xs text-ink-faint hover:text-ink hover:border-muted transition-colors select-none">
             Import JSON
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />

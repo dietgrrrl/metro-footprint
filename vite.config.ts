@@ -18,12 +18,39 @@ export default defineConfig(({ mode }) => {
       minify: !emitSourcemaps,
     },
     plugins: [
-react(),
+      react(),
       tailwindcss(),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      {
+        name: 'save-archive-endpoint',
+        configureServer(server) {
+          server.middlewares.use('/api/save-archive', async (req, res) => {
+            if (req.method === 'POST') {
+              const fs = await import('node:fs');
+              const path = await import('node:path');
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  const targetPath = path.resolve(__dirname, 'public/data/archive.json');
+                  fs.writeFileSync(targetPath, body, 'utf-8');
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ ok: true }));
+                } catch (e: any) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: e.message }));
+                }
+              });
+            } else {
+              res.statusCode = 404;
+              res.end();
+            }
+          });
+        },
+      },
     ],
     resolve: {
       alias: {
