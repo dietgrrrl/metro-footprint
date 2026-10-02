@@ -16,8 +16,23 @@ function project(lat: number, lon: number): [number, number] {
 // Guangzhou coordinates: 23.1291° N, 113.2644° E
 // project(23.1291, 113.2644) gives x ≈ 978, y ≈ 201
 // At zoom 1 (vW = 1200), center is at minX + 600.
-// Setting initial pan.x = 978 - 600 = 378 puts Guangzhou dead-center on map load.
-const INITIAL_PAN = { x: 378, y: 0 };
+// Setting initial pan.x = 978 - 600 = 378 puts Guangzhou dead-center on desktop.
+const DESKTOP_VIEW = { zoom: 1, pan: { x: 378, y: 0 } };
+
+// On mobile screens, zoom in to China (around lat 30°N, lon 113°E).
+// project(30, 113) ≈ (977, 180).
+// At zoom 2.5: vW = 480, vH = 216.
+// pan.x = 977 - 600 = 377. pan.y = 180 - 270 = -90.
+const MOBILE_VIEW = { zoom: 2.5, pan: { x: 377, y: -90 } };
+
+function isMobileViewport(): boolean {
+  return typeof window !== 'undefined' && window.innerWidth < 768;
+}
+
+function getDefaultView(isMobile: boolean) {
+  return isMobile ? MOBILE_VIEW : DESKTOP_VIEW;
+}
+
 const OFFSETS = [-W, 0, W];
 
 const LANDMASSES = [
@@ -50,20 +65,32 @@ export default function WorldMap({ cities }: Props) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; city: City } | null>(null);
 
-  // Zoom & Pan state (starting centered on Guangzhou)
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState(INITIAL_PAN);
+  // Viewport-aware initial state
+  const [isMobile, setIsMobile] = useState(isMobileViewport);
+  const initialView = getDefaultView(isMobileViewport());
+  const [zoom, setZoom] = useState(initialView.zoom);
+  const [pan, setPan] = useState(initialView.pan);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
   const hasMoved = useRef(false);
 
+  // Track window resize to update mobile state if necessary
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = isMobileViewport();
+      setIsMobile(mobile);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const clampPan = useCallback((pX: number, pY: number, z: number) => {
     const vH = H / z;
-    const maxY = (H - vH) / 2;
+    const maxY = Math.max(0, (H - vH) / 2);
     // Allow panning across horizontally wrapped world
-    const minPanX = INITIAL_PAN.x - W;
-    const maxPanX = INITIAL_PAN.x + W;
+    const minPanX = DESKTOP_VIEW.pan.x - W;
+    const maxPanX = DESKTOP_VIEW.pan.x + W;
     return {
       x: Math.max(minPanX, Math.min(maxPanX, pX)),
       y: Math.max(-maxY, Math.min(maxY, pY)),
@@ -74,7 +101,7 @@ export default function WorldMap({ cities }: Props) {
     setZoom(prevZoom => {
       const nextZoom = Math.max(1, Math.min(8, prevZoom * factor));
       if (nextZoom === 1) {
-        setPan(INITIAL_PAN);
+        setPan(DESKTOP_VIEW.pan);
         return 1;
       }
       if (clientX !== undefined && clientY !== undefined && svgRef.current) {
@@ -137,9 +164,40 @@ export default function WorldMap({ cities }: Props) {
     setIsDragging(false);
   };
 
+  // Touch support for dragging/panning on mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      hasMoved.current = false;
+      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      panStart.current = { ...pan };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !svgRef.current || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - dragStart.current.x;
+    const dy = e.touches[0].clientY - dragStart.current.y;
+
+    if (Math.hypot(dx, dy) > 5) {
+      hasMoved.current = true;
+    }
+
+    const rect = svgRef.current.getBoundingClientRect();
+    const scaleX = (W / zoom) / rect.width;
+    const scaleY = (H / zoom) / rect.height;
+
+    setPan(clampPan(panStart.current.x - dx * scaleX, panStart.current.y - dy * scaleY, zoom));
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   const resetZoom = () => {
-    setZoom(1);
-    setPan(INITIAL_PAN);
+    const def = getDefaultView(isMobile);
+    setZoom(def.zoom);
+    setPan(def.pan);
   };
 
   // ViewBox dimensions based on zoom & pan
@@ -148,15 +206,20 @@ export default function WorldMap({ cities }: Props) {
   const minX = (W - vW) / 2 + pan.x;
   const minY = (H - vH) / 2 + pan.y;
 
+  const defaultView = getDefaultView(isMobile);
+  const isDefaultView = zoom === defaultView.zoom && pan.x === defaultView.pan.x && pan.y === defaultView.pan.y;
+
   return (
     <div
       ref={containerRef}
-      className={`relative w-full overflow-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-      style={{ paddingBottom: `${(H / W) * 100}%` }}
+      className={`relative w-full overflow-hidden select-none h-[50vh] min-h-[300px] sm:h-auto sm:min-h-0 sm:pb-[45%] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <svg
         ref={svgRef}
@@ -298,10 +361,10 @@ export default function WorldMap({ cities }: Props) {
         >
           −
         </button>
-        {(zoom !== 1 || pan.x !== INITIAL_PAN.x || pan.y !== INITIAL_PAN.y) && (
+        {!isDefaultView && (
           <button
             onClick={resetZoom}
-            title="Reset to Guangzhou center"
+            title={isMobile ? "Reset to China view" : "Reset to world view"}
             className="px-2 h-7 rounded flex items-center justify-center font-mono text-xs text-gold hover:bg-surface transition-colors border-l border-border ml-0.5"
           >
             Reset
