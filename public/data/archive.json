@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T06:34:41.504Z",
+  "generatedAt": "2026-10-02T10:09:16.326Z",
   "cities": [
     {
       "id": "changsha",
@@ -265,7 +265,7 @@
       "tripDate": "2024-07",
       "totalLines": 13,
       "coveredLines": 13,
-      "otherLines": 0,
+      "otherLines": 5,
       "notes": "First trip in July 2024\nSecond trip in Aug 2026",
       "systemName": "Tokyo Metro + Toei Subway",
       "createdAt": "2026-10-02T01:47:17.952Z"
@@ -1490,102 +1490,130 @@
       "data": "/photos/Xiamen/Xiamen-3.jpg"
     },
     {
-      "id": "tokyo-tokyo-f-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-F.jpeg",
+      "id": "0b1297e5-bc48-49e7-b9fc-6e5afe182b3b",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Toei-A.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-F.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Toei-A.jpg"
     },
     {
-      "id": "tokyo-tokyo-g-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-G.jpeg",
+      "id": "130acdc3-17d3-4489-8a68-dafde8043c30",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-F.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-G.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-F.jpg"
     },
     {
-      "id": "tokyo-tokyo-m-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-M.jpeg",
+      "id": "18f9c1ff-2add-4f72-9c96-0bdfaa365ef8",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Toei-E.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-M.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Toei-E.jpg"
     },
     {
-      "id": "tokyo-tokyo-n-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-N.jpeg",
+      "id": "2854911c-bac9-4771-9714-16841235b559",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-other-JK.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-N.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-other-JK.jpg"
     },
     {
-      "id": "tokyo-tokyo-t-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-T.jpeg",
+      "id": "3179cdb8-05ed-4c2e-b177-64ffe4b04733",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Toei-S.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-T.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Toei-S.jpg"
     },
     {
-      "id": "tokyo-tokyo-toei-a-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-Toei-A.jpeg",
+      "id": "3217a609-3933-4684-81ca-0768381be9f1",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-other-JT.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-Toei-A.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-other-JT.jpg"
     },
     {
-      "id": "tokyo-tokyo-toei-i-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-Toei-I.jpeg",
+      "id": "405dd833-c9d0-43d1-b7b6-b3a7aed4b66d",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-M.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-Toei-I.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-M.jpg"
     },
     {
-      "id": "tokyo-tokyo-toei-s-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-Toei-S.jpeg",
+      "id": "4bced9f3-b09b-451b-a184-1844ff2920ae",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-other-KS.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-Toei-S.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-other-KS.jpg"
     },
     {
-      "id": "tokyo-tokyo-y-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-Y.jpeg",
+      "id": "584c0556-12e4-42d3-8151-3026bb43df88",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Toei-I.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-Y.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Toei-I.jpg"
     },
     {
-      "id": "tokyo-tokyo-z-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-Z.jpeg",
+      "id": "5d144ead-2838-4a3a-a5ff-3c7e4c80b0b5",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-N.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-Z.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-N.jpg"
     },
     {
-      "id": "tokyo-tokyo-other-jk-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-other-JK.jpeg",
+      "id": "89049101-df2b-49a7-a9f6-a70084089917",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-T.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-other-JK.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-T.jpg"
     },
     {
-      "id": "tokyo-tokyo-other-jt-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-other-JT.jpeg",
+      "id": "8e5eb538-46c7-4e66-9bd1-fc7ba21a4339",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-H.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-other-JT.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-H.jpg"
     },
     {
-      "id": "tokyo-tokyo-other-ks-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-other-KS.jpeg",
+      "id": "a08f93a7-00a4-4cb2-810e-72dc264bda9c",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Z.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-other-KS.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Z.jpg"
     },
     {
-      "id": "tokyo-tokyo-other-green-jpeg",
-      "cityId": "tokyo",
-      "filename": "Tokyo-other-green.jpeg",
+      "id": "af63525b-4575-4149-817b-dfa003acaf6b",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-Y.jpg",
       "caption": "",
-      "data": "/photos/Japan-Tokyo/Tokyo-other-green.jpeg"
+      "data": "/photos/Japan-Tokyo/Tokyo-Y.jpg"
+    },
+    {
+      "id": "c1f8c8e8-26b0-4f8e-8974-af22cc8c45bc",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-other-U.jpg",
+      "caption": "",
+      "data": "/photos/Japan-Tokyo/Tokyo-other-U.jpg"
+    },
+    {
+      "id": "c7f27863-7da5-4cea-9372-287342137850",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-G.jpg",
+      "caption": "",
+      "data": "/photos/Japan-Tokyo/Tokyo-G.jpg"
+    },
+    {
+      "id": "ccebd82a-a921-48c1-949c-cb1ac57e09d9",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-other-Enoden.jpg",
+      "caption": "",
+      "data": "/photos/Japan-Tokyo/Tokyo-other-Enoden.jpg"
+    },
+    {
+      "id": "e71ebe64-13b4-43bc-a78e-a90d3ff40bdd",
+      "cityId": "740ba2ec-e82f-490c-bbb1-fbe194ffb00a",
+      "filename": "Tokyo-C.jpg",
+      "caption": "",
+      "data": "/photos/Japan-Tokyo/Tokyo-C.jpg"
     },
     {
       "id": "beijing-beijing-13-jpeg",
@@ -1763,6 +1791,48 @@
       "data": "/photos/Kunming/Kunming-6.jpeg"
     },
     {
+      "id": "1bccc82f-9202-4768-ad45-150a8efdf7a5",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-1.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-1.jpeg"
+    },
+    {
+      "id": "1fdfca86-c2c2-4bd5-b123-40f07ac27af3",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-4.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-4.jpeg"
+    },
+    {
+      "id": "364ee346-7f82-4e05-82b8-df16ff2452ce",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-3.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-3.jpeg"
+    },
+    {
+      "id": "681e14af-4e10-41b0-a3a9-d499a24063ac",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-6.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-6.jpeg"
+    },
+    {
+      "id": "88720f16-a98c-4f55-893e-f2700ecb41f0",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-2.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-2.jpeg"
+    },
+    {
+      "id": "9815717b-4583-4690-b7b3-ce6ac1fbc0a8",
+      "cityId": "7c5b82de-0933-440f-881c-049449092070",
+      "filename": "Kunming-5.jpeg",
+      "caption": "",
+      "data": "/photos/Kunming/Kunming-5.jpeg"
+    },
+    {
       "id": "1b3500f2-5254-4024-9637-6a82a2d9d9fc",
       "cityId": "8b71a8a6-2ae6-4f44-ad32-93cd6917b62e",
       "filename": "Yokohama-all.jpg",
@@ -1859,6 +1929,34 @@
       "filename": "Wuxi-4.jpg",
       "caption": "",
       "data": "/photos/Wuxi/Wuxi-4.jpg"
+    },
+    {
+      "id": "094161f6-03ec-45e0-a6b2-a6e46c03edec",
+      "cityId": "19b77ad1-0a21-4385-a40a-05e3d5907532",
+      "filename": "Wuxi-4.jpg",
+      "caption": "",
+      "data": "/photos/Wuxi/Wuxi-4.jpg"
+    },
+    {
+      "id": "107550c4-459b-4c69-9aee-a7083eaecc66",
+      "cityId": "19b77ad1-0a21-4385-a40a-05e3d5907532",
+      "filename": "Wuxi-3.jpg",
+      "caption": "",
+      "data": "/photos/Wuxi/Wuxi-3.jpg"
+    },
+    {
+      "id": "11a5f9b2-6c97-4880-9f1c-b669fbf879b6",
+      "cityId": "19b77ad1-0a21-4385-a40a-05e3d5907532",
+      "filename": "Wuxi-2.jpg",
+      "caption": "",
+      "data": "/photos/Wuxi/Wuxi-2.jpg"
+    },
+    {
+      "id": "e248180a-b623-482c-9824-dfa5918dfe30",
+      "cityId": "19b77ad1-0a21-4385-a40a-05e3d5907532",
+      "filename": "Wuxi-1.jpg",
+      "caption": "",
+      "data": "/photos/Wuxi/Wuxi-1.jpg"
     },
     {
       "id": "singapore-singapore-thompsoneastcoast-jpeg",
