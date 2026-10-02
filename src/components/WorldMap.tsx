@@ -164,35 +164,103 @@ export default function WorldMap({ cities }: Props) {
     setIsDragging(false);
   };
 
-  // Touch support for dragging/panning on mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      hasMoved.current = false;
-      dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      panStart.current = { ...pan };
-    }
-  };
+  // Non-passive native touch handlers for smooth dragging & pinch-to-zoom without page zoom
+  const pinchStartDist = useRef<number | null>(null);
+  const pinchStartZoom = useRef<number>(1);
+  const pinchCenter = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !svgRef.current || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - dragStart.current.x;
-    const dy = e.touches[0].clientY - dragStart.current.y;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-    if (Math.hypot(dx, dy) > 5) {
-      hasMoved.current = true;
-    }
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        setIsDragging(true);
+        hasMoved.current = false;
+        dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        panStart.current = { ...pan };
+      } else if (e.touches.length === 2) {
+        setIsDragging(false);
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        pinchStartDist.current = dist;
+        pinchStartZoom.current = zoom;
+        pinchCenter.current = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        };
+      }
+    };
 
-    const rect = svgRef.current.getBoundingClientRect();
-    const scaleX = (W / zoom) / rect.width;
-    const scaleY = (H / zoom) / rect.height;
+    const onTouchMove = (e: TouchEvent) => {
+      // Prevent browser viewport from zooming or scrolling while interacting with map
+      if (e.cancelable) {
+        e.preventDefault();
+      }
 
-    setPan(clampPan(panStart.current.x - dx * scaleX, panStart.current.y - dy * scaleY, zoom));
-  };
+      if (e.touches.length === 1 && isDragging && svgRef.current) {
+        const dx = e.touches[0].clientX - dragStart.current.x;
+        const dy = e.touches[0].clientY - dragStart.current.y;
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
+        if (Math.hypot(dx, dy) > 5) {
+          hasMoved.current = true;
+        }
+
+        const rect = svgRef.current.getBoundingClientRect();
+        const scaleX = (W / zoom) / rect.width;
+        const scaleY = (H / zoom) / rect.height;
+
+        setPan(clampPan(panStart.current.x - dx * scaleX, panStart.current.y - dy * scaleY, zoom));
+      } else if (e.touches.length === 2 && pinchStartDist.current !== null && pinchStartDist.current > 0) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / pinchStartDist.current;
+        const targetZoom = Math.max(1, Math.min(8, pinchStartZoom.current * factor));
+
+        if (svgRef.current) {
+          const rect = svgRef.current.getBoundingClientRect();
+          const mouseXRatio = (pinchCenter.current.x - rect.left) / rect.width - 0.5;
+          const mouseYRatio = (pinchCenter.current.y - rect.top) / rect.height - 0.5;
+
+          setZoom(targetZoom);
+          setPan(prevPan => {
+            const shiftX = -mouseXRatio * (W / pinchStartZoom.current - W / targetZoom);
+            const shiftY = -mouseYRatio * (H / pinchStartZoom.current - H / targetZoom);
+            return clampPan(panStart.current.x + shiftX, panStart.current.y + shiftY, targetZoom);
+          });
+        }
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        setIsDragging(false);
+        pinchStartDist.current = null;
+      } else if (e.touches.length === 1) {
+        // Transitioned from pinch to 1 finger: restart drag baseline
+        setIsDragging(true);
+        pinchStartDist.current = null;
+        dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        panStart.current = { ...pan };
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [isDragging, zoom, pan, clampPan]);
 
   const resetZoom = () => {
     const def = getDefaultView(isMobile);
@@ -212,14 +280,11 @@ export default function WorldMap({ cities }: Props) {
   return (
     <div
       ref={containerRef}
-      className={`relative w-full overflow-hidden select-none h-[50vh] min-h-[300px] sm:h-auto sm:min-h-0 sm:pb-[45%] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`relative w-full overflow-hidden select-none touch-none h-[50vh] min-h-[300px] sm:h-auto sm:min-h-0 sm:pb-[45%] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <svg
         ref={svgRef}

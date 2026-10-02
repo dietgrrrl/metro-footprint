@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import type { Photo } from '../lib/types';
 
 interface Props {
@@ -14,6 +14,32 @@ export default function PhotoLightbox({ photos, index, onClose, onNavigate }: Pr
   const prev = useCallback(() => { if (index > 0) onNavigate(index - 1); }, [index, onNavigate]);
   const next = useCallback(() => { if (index < photos.length - 1) onNavigate(index + 1); }, [index, photos.length, onNavigate]);
 
+  // Touch swipe support (left / right)
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+    // Trigger only if horizontal swipe dominates vertical scroll and exceeds threshold (45px)
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+      if (deltaX < 0) {
+        next();
+      } else {
+        prev();
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -28,8 +54,10 @@ export default function PhotoLightbox({ photos, index, onClose, onNavigate }: Pr
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-bg/96 backdrop-blur-sm flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[100] bg-bg/96 backdrop-blur-sm flex flex-col items-center justify-center select-none touch-none"
       onClick={onClose}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4">
